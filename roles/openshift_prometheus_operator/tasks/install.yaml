@@ -1,0 +1,96 @@
+---
+- name: Create temp directory for doing work in on target
+  command: mktemp -d openshift-prometheus-operator-ansible-XXXXXX
+  register: mktemp
+  changed_when: False
+
+- set_fact:
+    tempdir: "{{ mktemp.stdout }}"
+    # TODO: remove
+    openshift_client_binary: /usr/bin/oc
+    openshift:
+     common:
+        config_base: /etc/origin
+ 
+- name: Copy files to temp directory
+  command: >
+    cp -r /usr/share/ansible/openshift-ansible/roles/openshift_prometheus_operator/files/{{ item }} 
+    {{ mktemp.stdout }}/
+  with_items:
+  - manifests
+  - assets
+ 
+- name: Copy admin client config
+  command: >
+    cp {{ openshift.common.config_base }}/master/admin.kubeconfig {{ mktemp.stdout }}/admin.kubeconfig
+  changed_when: false
+ 
+- name: Ensure monitoring project exists
+  oc_project:
+    state: present
+    name: "{{ openshift_prometheus_operator_namespace }}"
+    description: Prometheus Operator
+ 
+- name: Apply the prometheus-operator manifest
+  command: >
+    {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/manifests/prometheus-operator"
+    --config={{ mktemp.stdout }}/admin.kubeconfig
+    -n {{ openshift_prometheus_operator_namespace }}
+ 
+- name: Wait for Operator to register custom resource definitions
+  command: "{{ openshift_client_binary }} get crd servicemonitors.monitoring.coreos.com"
+  register: result
+  until: result.rc == 0
+  retries: 10
+  delay: 2
+ 
+- name: Apply the prometheus manifest
+  command: >
+    {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/manifests/prometheus"
+    --config={{ mktemp.stdout }}/admin.kubeconfig
+ 
+- name: Expose prometheus-k8s service
+  oc_route:
+    name: prometheus-k8s
+    service_name: prometheus-k8s
+    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    state: present
+ 
+- name: Generate rules configmap
+  oc_configmap:
+    name: prometheus-k8s-rules
+    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    state: present
+    from_file:
+      alertmanager.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/alertmanager.rules.yaml"
+      project-lifecycle.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/project-lifecycle.rules.yaml"
+      prometheus.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/prometheus.rules.yaml"
+
+- name: Create alertmanager secret config
+  oc_secret:
+    name: alertmanager-main
+    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    state: present
+    files:
+      - name: alertmanager.yaml
+        path: "{{ mktemp.stdout }}/assets/alertmanager/alertmanager.yaml"
+ 
+- name: Apply the alertmanager manifest
+  command: >
+    {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/manifests/alertmanager"
+    --config={{ mktemp.stdout }}/admin.kubeconfig
+    -n {{ openshift_prometheus_operator_namespace }}
+
+- name: Expose alertmanager-main service
+  oc_route:
+    name: alertmanager-main
+    service_name: alertmanager-main
+    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    state: present
+
+- name: Delete temp directory
+  file:
+    name: "{{ tempdir }}"
+    state: absent
+  changed_when: False
+ 

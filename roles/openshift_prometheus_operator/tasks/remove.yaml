@@ -1,0 +1,5 @@
+---
+- name: Remove openshift-prometheus-operator project
+  oc_project:
+    name: "{{ openshift_prometheus_operator_namespace }}"
+  state: absent
