@@ -1,0 +1,14 @@
+---
+# The desired state of the auto heal components:
+openshift_autoheal_state: present
+
+# The namespace where the components will be created:
+openshift_autoheal_namespace: openshift-autoheal
+
+# The name and port of the service:
+openshift_autoheal_service_name: autoheal
+openshift_autoheal_service_port: 9099
+
+# The regular expression that alerts (the `alertname` label) should
+# match in order to be automatically handled by the auto heal service.
+openshift_autoheal_alert_pattern: "K8SApiserverDown"

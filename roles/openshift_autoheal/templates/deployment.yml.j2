@@ -1,0 +1,30 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: "{{ openshift_autoheal_namespace }}"
+  name: autoheal
+spec:
+  selector:
+    matchLabels:
+      app: autoheal
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: autoheal
+    spec:
+      volumes:
+      - name: code
+        configMap:
+          name: autoheal-code
+      containers:
+      - name: server
+        image: registry.access.redhat.com/rhscl/python-35-rhel7:latest
+        volumeMounts:
+        - name: code
+          mountPath: /code
+        args:
+        - /opt/app-root/bin/python3
+        - /code/main.py
+        ports:
+        - containerPort: "{{ openshift_autoheal_service_port }}"
