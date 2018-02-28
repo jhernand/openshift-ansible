@@ -12,3 +12,6 @@ route:
     receiver: 'null'
 receivers:
 - name: 'null'
+- name: autoheal
+  webhook_configs:
+  - url: http://autoheal.openshift-autoheal.svc.cluster.local:9099
