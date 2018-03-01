@@ -1,0 +1,30 @@
+---
+- name: Prometheus Operator Checkpoint Start
+  hosts: all
+  gather_facts: false
+  tasks:
+  - name: Set Prometheus Operator 'In Progress'
+    run_once: true
+    set_stats:
+      data:
+        installer_phase_prometheus_operator:
+          status: "In Progress"
+    start: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
+
+
+- name: Configure openshift-prometheus
+  hosts: oo_first_master
+  roles:
+  - role: openshift_prometheus_operator
+
+- name: Prometheus Operator Checkpoint End
+  hosts: all
+  gather_facts: false
+  tasks:
+  - name: Set Prometheus Operator 'Complete'
+    run_once: true
+    set_stats:
+      data:
+        installer_phase_prometheus_operator:
+          status: "Complete"
+    end: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
