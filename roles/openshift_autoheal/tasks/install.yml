@@ -1,0 +1,47 @@
+---
+- name: Create the auto-heal namespace
+  oc_project:
+    state: present
+    name: "{{ openshift_autoheal_namespace }}"
+    description: Auto-heal example
+
+- name: Create the auto-heal service
+  oc_service:
+    namespace: "{{ openshift_autoheal_namespace }}"
+    name: "{{ openshift_autoheal_service_name }}"
+    selector:
+      app: autoheal
+    ports:
+    - name: autoheal
+      port: "{{ openshift_autoheal_service_port }}"
+      targetPort: "{{ openshift_autoheal_service_port }}"
+      protocol: TCP
+
+- name: Generate the auto-heal server script
+  template:
+    src: main.py.j2
+    dest: "{{ tempdir }}/main.py"
+  changed_when: no
+
+- name: Generate the auto-heal deployment YAML
+  template:
+    src: deployment.yml.j2
+    dest: "{{ tempdir }}/deployment.yml"
+  changed_when: no
+
+- name: Create the configuration map with the auto-heal code
+  oc_configmap:
+    state: present
+    namespace: "{{ openshift_autoheal_namespace }}"
+    name: autoheal-code
+    from_file:
+      main.py: "{{ tempdir }}/main.py"
+
+- name: Create the auto-heal deployment
+  oc_obj:
+    state: present
+    namespace: "{{ openshift_autoheal_namespace }}"
+    name: autoheal
+    kind: deployment
+    files:
+    - "{{ tempdir }}/deployment.yml"

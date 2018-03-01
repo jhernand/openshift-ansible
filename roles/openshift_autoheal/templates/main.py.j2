@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import http.client
+import http.server
+import json
+import re
+import ssl
+import sys
+import urllib.parse
+
+# Alerts whose name matches this regular expression will be handled, the rest
+# will be ignored:
+ALERT_RE = re.compile(
+    pattern=r"{{ openshift_autoheal_alert_pattern }}", 
+    flags=re.IGNORECASE,
+)
+
+# AWX connection and job template details:
+AWX_HOST = "{{ openshift_autoheal_awx_host }}"
+AWX_PORT = {{ openshift_autoheal_awx_port }}
+AWX_USER = "{{ openshift_autoheal_awx_user }}"
+AWX_PASSWORD = "{{ openshift_autoheal_awx_password }}"
+AWX_PROJECT = "{{ openshift_autoheal_awx_project }}"
+AWX_TEMPLATE = "{{ openshift_autoheal_awx_template }}"
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        # Read and parse the request body:
+        length = int(self.headers["Content-Length"])
+        body = self.rfile.read(length)
+        body = body.decode("utf-8")
+        body = json.loads(body)
+        say("Alert manager request:\n%s" % indent(body))
+
+        # Send an empty response:
+        self.send_response(200)
+        self.end_headers()
+
+        # Process all the alerts:
+        alerts = body["alerts"]
+        for alert in alerts:
+            process_alert(alert)
+
+def process_alert(alert):
+    # Check if the alert matches the regular expression:
+    labels = alert["labels"]
+    name = labels["alertname"]
+    if ALERT_RE.match(name) is None:
+        say("Alert '{name}' doesn't match pattern '{pattern}'".format(
+            name=name,
+            pattern=ALERT_RE.pattern,
+        ))
+        return
+    else:
+        say("Alert '{name}' matches pattern '{pattern}'".format(
+            name=name,
+            pattern=ALERT_RE.pattern,
+        ))
+
+    # Request the authentication token:
+    token = get_token()
+
+    # Build the query to find the job template:
+    query = {
+        "name": AWX_TEMPLATE,
+        "project__name": AWX_PROJECT,
+    }
+    query = urllib.parse.urlencode(query)
+
+    # Send the request to find the job template:
+    response = send_request(
+        method="GET",
+        path="/api/v2/job_templates/?{query}".format(
+            query=query,
+        ),
+        token=token,
+    )
+
+    # Get the identifier of the job template:
+    template_id = response["results"][0]["id"]
+
+    # Send the request to launch the job template, including all the labels
+    # of the alert as extra variables for the AWX job template:
+    extra_vars = labels
+    extra_vars = json.dumps(extra_vars)
+    send_request(
+        method='POST',
+        path="/api/v2/job_templates/{id}/launch/".format(
+            id=template_id,
+        ),
+        token=token,
+        body={
+          "extra_vars": extra_vars,
+        },
+    )
+
+def get_token():
+    response = send_request(
+        method="POST",
+        path="/api/v2/authtoken/",
+        body={
+            "username": AWX_USER,
+            "password": AWX_PASSWORD,
+        },
+    )
+    return response["token"]
+
+def send_request(method, path, token=None, body=None):
+    say("AWX host: {host}".format(host=AWX_HOST))
+    say("AWX port: {port}".format(port=AWX_PORT))
+    say("AWX method: {method}".format(method=method))
+    say("AWX path: {path}".format(path=path))
+    if token is not None:
+        say("AWX token: {token}".format(token=token))
+    if body is not None:
+        say("AWX request:\n{body}".format(body=indent(body)))
+    try:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        context.verify_mode = ssl.CERT_NONE
+        context.check_hostname = False
+        connection = http.client.HTTPSConnection(
+            host=AWX_HOST,
+            port=AWX_PORT,
+            context=context,
+        )
+        body = json.dumps(body)
+        body = body.encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        if token is not None:
+            headers["Authorization"] = "Token {token}".format(token=token)
+        connection.request(
+            method=method,
+            url=path,
+            headers=headers,
+            body=body,
+        )
+        response = connection.getresponse()
+        body = response.read()
+        body = body.decode("utf-8")
+        body = json.loads(body)
+        say("AWX response:\n{body}".format(body=indent(body)))
+        return body
+    finally:
+        connection.close()
+
+def indent(data):
+    return json.dumps(data, indent=2)
+
+def say(what):
+    sys.stdout.write(str(what))
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+# Start the web server:
+address = ('0.0.0.0', {{ openshift_autoheal_service_port }})
+say("Listening on address '{address}' and port {port}".format(
+    address=address[0],
+    port=address[1],
+))
+server = http.server.HTTPServer(address, Handler)
+server.serve_forever()

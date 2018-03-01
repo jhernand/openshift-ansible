@@ -1,0 +1,20 @@
+---
+- name: Create temporary directory
+  command: mktemp -td openshift-ansible-autoheal-XXXXXX
+  register: mktemp
+  changed_when: False
+
+- set_fact:
+    tempdir: "{{ mktemp.stdout }}"
+
+- include_tasks: install.yml
+  when: openshift_autoheal_state == 'present'
+
+- include_tasks: uninstall.yml
+  when: openshift_autoheal_state == 'absent'
+
+- name: Delete temporary directory
+  file:
+    name: "{{ tempdir }}"
+    state: absent
+  changed_when: False
