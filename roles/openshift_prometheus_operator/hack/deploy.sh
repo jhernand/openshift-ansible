@@ -13,6 +13,8 @@ echo "Done!"
 
 oc apply -f files/manifests/prometheus
 
+./hack/generate-kube-controller-manager-service.sh | oc apply -f -
+
 oc expose service prometheus-k8s
 
 ./hack/generate-rules-configmap.sh | oc apply -f -
