@@ -10,7 +10,7 @@ spec:
       alertmanager: main
   namespaceSelector:
     matchNames:
-    - monitoring
+    - openshift-monitoring
   endpoints:
   - port: web
     interval: 30s

@@ -24,7 +24,7 @@ spec:
       memory: 64Mi
   alerting:
     alertmanagers:
-    - namespace: monitoring
+    - namespace: openshift-monitoring
       name: alertmanager-main
       port: web
   securityContext:

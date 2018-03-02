@@ -19,6 +19,7 @@
   with_items:
   - manifests
   - assets
+  - project.yaml
  
 - name: Copy admin client config
   command: >
@@ -26,16 +27,20 @@
   changed_when: false
  
 - name: Ensure monitoring project exists
-  oc_project:
-    state: present
-    name: "{{ openshift_prometheus_operator_namespace }}"
-    description: Prometheus Operator
+  command: >
+    {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/project.yaml"
+    --config={{ mktemp.stdout }}/admin.kubeconfig
+
+- name: Use monitoring project
+  command: >
+    {{ openshift_client_binary }} project openshift-monitoring
+    --config={{ mktemp.stdout }}/admin.kubeconfig
  
 - name: Apply the prometheus-operator manifest
   command: >
     {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/manifests/prometheus-operator"
     --config={{ mktemp.stdout }}/admin.kubeconfig
-    -n {{ openshift_prometheus_operator_namespace }}
+    -n openshift-monitoring
  
 - name: Wait for Operator to register custom resource definitions
   command: "{{ openshift_client_binary }} get crd servicemonitors.monitoring.coreos.com"
@@ -53,13 +58,13 @@
   oc_route:
     name: prometheus-k8s
     service_name: prometheus-k8s
-    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    namespace: openshift-monitoring
     state: present
  
 - name: Generate rules configmap
   oc_configmap:
     name: prometheus-k8s-rules
-    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    namespace: openshift-monitoring
     state: present
     from_file:
       alertmanager.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/alertmanager.rules.yaml"
@@ -69,7 +74,7 @@
 - name: Create alertmanager secret config
   oc_secret:
     name: alertmanager-main
-    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    namespace: openshift-monitoring
     state: present
     files:
       - name: alertmanager.yaml
@@ -79,13 +84,13 @@
   command: >
     {{ openshift_client_binary }} apply -f "{{ mktemp.stdout }}/manifests/alertmanager"
     --config={{ mktemp.stdout }}/admin.kubeconfig
-    -n {{ openshift_prometheus_operator_namespace }}
+    -n openshift-monitoring
 
 - name: Expose alertmanager-main service
   oc_route:
     name: alertmanager-main
     service_name: alertmanager-main
-    namespace: "{{ openshift_prometheus_operator_namespace }}"
+    namespace: openshift-monitoring
     state: present
 
 - name: Delete temp directory
