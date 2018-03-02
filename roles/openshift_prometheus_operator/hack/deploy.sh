@@ -2,8 +2,8 @@
 
 
 #oc login -u system:admin
-oc new-project monitoring
-oc project monitoring
+oc apply -f files/project.yaml
+oc project openshift-monitoring
 
 oc apply -f files/manifests/prometheus-operator
 

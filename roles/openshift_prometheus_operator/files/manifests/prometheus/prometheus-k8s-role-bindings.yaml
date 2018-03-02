@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -10,7 +10,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -24,7 +24,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -38,7 +38,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -52,7 +52,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -65,4 +65,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-k8s
-  namespace: monitoring
+  namespace: openshift-monitoring

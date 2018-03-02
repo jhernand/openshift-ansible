@@ -8,9 +8,9 @@ Ansible 2.2
 
 # Role Variables
 
-| Name                                    | Default      |                  |
-|-----------------------------------------|--------------|------------------|
-| openshift_prometheus_operator_namespace | monitoring   |                  |
+| Name                                    | Default                |                  |
+|----------------|------------------------|------------------|
+|                |                        |                  |
 
 # Dependencies
 
@@ -30,4 +30,3 @@ Ansible 2.2
 # License
 
 Apache License, Version 2.0
-

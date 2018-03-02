@@ -11,14 +11,14 @@ $ oc login -u system:admin
 $ ./hack/deploy.sh
 ```
 
-The Prometheus cluster is exposed at http://prometheus-k8s-monitoring.127.0.0.1.nip.io.
+The Prometheus cluster is exposed at http://prometheus-k8s-openshift-monitoring.127.0.0.1.nip.io.
 
-The Alert Manager cluster is exposed at http://alertmanager-main-monitoring.127.0.0.1.nip.io.
+The Alert Manager cluster is exposed at http://alertmanager-main-openshift-monitoring.127.0.0.1.nip.io.
 
 
 ## What's in the box
 
-Currently, all the monitoring components live in the `monitoring` namespace. This include the custom resources describing Prometheus and Alert Manager.
+Currently, all the monitoring components live in the `openshift-monitoring` namespace. This include the custom resources describing Prometheus and Alert Manager.
 
 * [Prometheus Operator](files/manifests/prometheus-operator)
 * [Prometheus](files/manifests/prometheus)
@@ -37,7 +37,7 @@ Individual component integration can take the following forms.
 To enable a component as a metrics collection target, do one or more of the following:
 
 * Create a new `ServiceMonitor` resource in the [prometheus directory](files/manifests/prometheus) following the `prometheus-k8s-service-{COMPONENT_NAME}` convention. The `ServiceMonitor` should use label and/or namespace selectors to find the component's `Service` endpoints.
-  * **NOTE**: Only the following namespaces are supported at this time: `monitoring`, `kube-system`, `default`, `openshift`.
+  * **NOTE**: Only the following namespaces are supported at this time: `openshift-monitoring`, `kube-system`, `default`, `openshift`.
 * (FUTURE) Create a `Service` in the cluster which matches the following default namespace and label selector: (TODO)
 
 ### Recording and Alert Rules
