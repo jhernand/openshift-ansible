@@ -11,7 +11,12 @@ route:
       alertname: DeadMansSwitch
     receiver: 'null'
   - match:
-      alertname: K8SControllerManagerDown
+      alertname: OpenShiftApiserverDown
+      severity: critical
+    receiver: 'null'
+  - match:
+      alertname: OpenShiftApiserverDown
+      severity: page
     receiver: 'openshift-pagerduty'
 receivers:
 - name: 'null'
