@@ -11,4 +11,4 @@ openshift_autoheal_service_port: 9099
 
 # The regular expression that alerts (the `alertname` label) should
 # match in order to be automatically handled by the auto heal service.
-openshift_autoheal_alert_pattern: "K8SApiserverDown"
+openshift_autoheal_alert_pattern: "OpenShiftApiserverDown"
