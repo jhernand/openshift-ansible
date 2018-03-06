@@ -8,13 +8,14 @@ Ansible 2.2
 
 # Role Variables
 
-| Name                                    | Default                |                  |
-|----------------|------------------------|------------------|
-|                |                        |                  |
+| Name                                      | Default                |                  |
+|-------------------------------------------|------------------------|------------------|
+| prometheus_operator_pagerduty_service_key |                        |                  |
 
 # Dependencies
 
 - lib_openshift
+- lib_utils
 - openshift_facts
 
 # Example Playbook

@@ -71,6 +71,25 @@
       project-lifecycle.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/project-lifecycle.rules.yaml"
       prometheus.rules.yaml: "{{ mktemp.stdout }}/assets/prometheus/rules/prometheus.rules.yaml"
 
+- name: Update alertmanager config
+  yedit:
+    src: "{{ mktemp.stdout }}/assets/alertmanager/alertmanager.yaml"
+    edits:
+    - key: global
+      value: "{{ prometheus_operator_alertmanager_global }}"
+    - key: receivers
+      value:
+      - name: 'null'
+      - name: autoheal
+        webhook_configs:
+        - url: http://autoheal.openshift-autoheal.svc.cluster.local:9099
+      - name: 'openshift-pagerduty'
+        pagerduty_configs:
+        - service_key: "{{ prometheus_operator_pagerduty_service_key }}"
+    separator: '#'
+    state: present
+    debug: true
+
 - name: Create alertmanager secret config
   oc_secret:
     name: alertmanager-main
