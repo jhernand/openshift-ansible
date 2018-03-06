@@ -1,0 +1,6 @@
+---
+- name: Install the auto-heal service
+  hosts: oo_first_master
+  tasks:
+  - include_role:
+      name: openshift_autoheal

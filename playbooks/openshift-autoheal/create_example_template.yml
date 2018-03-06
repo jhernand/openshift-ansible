@@ -1,0 +1,31 @@
+---
+- name: Create the job template that starts the API server
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+
+  - name: Load the patched AWX modules
+    import_role:
+      name: lib_awx
+
+  - name: Load the defaults from the auto-heal role
+    include_vars: roles/openshift_autoheal/defaults/main.yml
+
+  - name: Create the the job template
+    tower_job_template_v2_api:
+      state: present
+      project: "{{ openshift_autoheal_awx_project }}"
+      inventory: "{{ openshift_autoheal_awx_inventory }}"
+      name: "{{ openshift_autoheal_awx_template }}"
+      job_type: run
+      playbook: "playbooks/openshift-autoheal/start_api_server.yml"
+      ask_extra_vars: yes
+      ask_credential: yes
+      limit: yes
+
+  - name: Grant the auto-heal user permission to execute the job template
+    tower_role_v2_api:
+      user: "{{ openshift_autoheal_awx_user }}"
+      job_template: "{{ openshift_autoheal_awx_template }}"
+      role: execute

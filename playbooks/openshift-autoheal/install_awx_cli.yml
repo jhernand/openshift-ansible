@@ -1,0 +1,12 @@
+---
+- name: Install the AWX CLI package
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+  - yum:
+      state: installed
+      name: python-pip
+  - pip:
+      state: present
+      name: ansible-tower-cli
