@@ -10,8 +10,14 @@ route:
   - match:
       alertname: DeadMansSwitch
     receiver: 'null'
+  - match:
+      alertname: K8SControllerManagerDown
+    receiver: 'openshift-pagerduty'
 receivers:
 - name: 'null'
 - name: autoheal
   webhook_configs:
   - url: http://autoheal.openshift-autoheal.svc.cluster.local:9099
+- name: 'openshift-pagerduty'
+  pagerduty_configs:
+  - service_key: xxxxx
