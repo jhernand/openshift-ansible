@@ -1,0 +1,96 @@
+---
+- name: Prepare the AWX server
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+
+  - name: Import the patched AWX modules
+    import_role:
+      name: lib_awx
+
+  - name: Load the variables from the auto-heal role
+    include_vars: roles/openshift_autoheal/defaults/main.yml
+
+  - name: Create the AWX CLI configuration file
+    template:
+      src: tower_cli.cfg.j2
+      dest: "{{ lookup('env', 'HOME') }}/.tower_cli.cfg"
+      mode: 0600
+
+  - name: Create the AWX auto-heal organization
+    tower_organization:
+      state: present
+      name: "{{ openshift_autoheal_awx_organization }}"
+
+  - name: Create AWX inventory for the cluster nodes
+    tower_inventory:
+      state: present
+      organization: "{{ openshift_autoheal_awx_organization }}"
+      name: "{{ openshift_autoheal_awx_inventory }}"
+
+  - name: Add cluster nodes to the AWX inventory
+    tower_host:
+      state: present
+      inventory: "{{ openshift_autoheal_awx_inventory }}"
+      name: "{{ item }}"
+    with_items:
+    - "{{ groups['nodes'] }}"
+
+  - name: Create the AWX auto-heal SCM credential
+    tower_credential_v2_api:
+      state: present
+      organization: "{{ openshift_autoheal_awx_organization }}"
+      name: "Auto-heal SCM"
+      kind: scm
+      username: ""
+      password: ""
+
+  - name: Create the AWX auto-heal SSH credential
+    tower_credential_v2_api:
+      state: present
+      organization: "{{ openshift_autoheal_awx_organization }}"
+      name: "Auto-heal SSH"
+      kind: ssh
+      ssh_key_data: "{{ lookup('env', 'HOME') }}/.ssh/id_autoheal"
+
+  - name: Create the AWX auto-heal project
+    tower_project :
+      state: present
+      organization: "{{ openshift_autoheal_awx_organization }}"
+      name: "{{ openshift_autoheal_awx_project }}"
+      scm_type: git
+      scm_url: "{{ openshift_autoheal_awx_scm_url }}"
+      scm_branch: "{{ openshift_autoheal_awx_scm_branch }}"
+      scm_credential: "Auto-heal SCM"
+
+  - name: Create the AWX auto-heal user
+    tower_user:
+      state: present
+      username: "{{ openshift_autoheal_awx_user }}"
+      password: "{{ openshift_autoheal_awx_user_password }}"
+      email: "{{ openshift_autoheal_awx_user_mail }}"
+
+  - name: Make the AWX user a member of the auto-heal organization
+    tower_role_v2_api:
+      user: "{{ openshift_autoheal_awx_user }}"
+      organization: "{{ openshift_autoheal_awx_organization }}"
+      role: member
+
+  - name: Grant the AWX user permission to use the nodes inventory
+    tower_role_v2_api:
+      user: "{{ openshift_autoheal_awx_user }}"
+      inventory: "{{ openshift_autoheal_awx_inventory }}"
+      role: use
+
+  - name: Grant the AWX user permission to use the auto-heal project
+    tower_role_v2_api:
+      user: "{{ openshift_autoheal_awx_user }}"
+      project: "{{ openshift_autoheal_awx_project }}"
+      role: use
+
+  - name: Grant the AWX user permission to use the SSH credential
+    tower_role_v2_api:
+      user: "{{ openshift_autoheal_awx_user }}"
+      credential: "Auto-heal SSH"
+      role: use

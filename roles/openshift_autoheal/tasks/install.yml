@@ -45,3 +45,9 @@
     kind: deployment
     files:
     - "{{ tempdir }}/deployment.yml"
+
+- name: Delete temporary directory
+  file:
+    name: "{{ tempdir }}"
+    state: absent
+  changed_when: False

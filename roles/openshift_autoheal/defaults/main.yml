@@ -12,3 +12,24 @@ openshift_autoheal_service_port: 9099
 # The regular expression that alerts (the `alertname` label) should
 # match in order to be automatically handled by the auto heal service.
 openshift_autoheal_alert_pattern: "OpenShiftApiserverDown"
+
+# The connection details of the AWX server:
+openshift_autoheal_awx_port: 443
+
+# The name of the AWX administrator that has permissions to create the
+# organization, user and project used by the auto-heal service.
+openshift_autoheal_awx_admin: admin
+
+# The name of the AWX user that will launch the jobs:
+openshift_autoheal_awx_user: autoheal
+openshift_autoheal_awx_user_mail: autoheal@localhost
+
+# The names of the AWX objects:
+openshift_autoheal_awx_organization: "OpenShift auto-heal"
+openshift_autoheal_awx_project: "OpenShift auto-heal"
+openshift_autoheal_awx_inventory: "OpenShift nodes"
+openshift_autoheal_awx_template: "Start API server"
+
+# The SCM details:
+openshift_autoheal_awx_scm_url: "https://github.com/ironcladlou/openshift-ansible"
+openshift_autoheal_awx_scm_branch: "monitoring-platform"

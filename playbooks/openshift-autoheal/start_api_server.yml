@@ -1,7 +1,15 @@
 ---
-- name: Start the API server
+- name: Start the API servers
   hosts: all
   tasks:
-  - systemd:
-      name: origin-master-api
+
+  - name: Check if this is a master node
+    stat:
+      path: /usr/lib/systemd/system/origin-master-api.service
+    register: master_service
+
+  - restart: Start the API servers on master nodes
+    systemd:
       state: started
+      name: origin-master-api
+    when: master_service.stat.exists

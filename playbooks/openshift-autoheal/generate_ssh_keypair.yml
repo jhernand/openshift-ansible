@@ -1,0 +1,21 @@
+---
+- name: Generate the auto-heal SSH key pair
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    private_key: "{{ lookup('env', 'HOME') }}/.ssh/id_autoheal"
+  tasks:
+  - include_vars: roles/openshift_autoheal/defaults/main.yml
+  - shell: "ssh-keygen -b 4096 -t rsa -f '{{ private_key }}' -N '' -C '{{ openshift_autoheal_awx_user_mail }}'"
+    args:
+      creates: "{{ private_key }}"
+
+- name: Add the auto-heal SSH public key to the authorized_keys file of all the nodes
+  hosts: nodes
+  vars:
+    public_key: "{{ lookup('env', 'HOME') }}/.ssh/id_autoheal.pub"
+  tasks:
+  - authorized_key:
+      key: "{{ lookup('file', public_key) }}"
+      user: root
