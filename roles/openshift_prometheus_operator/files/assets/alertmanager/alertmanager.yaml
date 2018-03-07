@@ -13,7 +13,7 @@ route:
   - match:
       alertname: OpenShiftApiserverDown
       severity: critical
-    receiver: 'null'
+    receiver: autoheal
   - match:
       alertname: OpenShiftApiserverDown
       severity: page
