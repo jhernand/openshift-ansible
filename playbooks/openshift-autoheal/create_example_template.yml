@@ -17,15 +17,15 @@
       state: present
       project: "{{ openshift_autoheal_awx_project }}"
       inventory: "{{ openshift_autoheal_awx_inventory }}"
+      machine_credential: "Auto-heal SSH"
       name: "{{ openshift_autoheal_awx_template }}"
       job_type: run
       playbook: "playbooks/openshift-autoheal/start_api_server.yml"
-      ask_extra_vars: yes
-      ask_credential: yes
-      limit: yes
+      ask_extra_vars: true
 
   - name: Grant the auto-heal user permission to execute the job template
     tower_role_v2_api:
+      state: present
       user: "{{ openshift_autoheal_awx_user }}"
       job_template: "{{ openshift_autoheal_awx_template }}"
       role: execute
