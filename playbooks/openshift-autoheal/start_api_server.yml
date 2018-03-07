@@ -1,0 +1,7 @@
+---
+- name: Start the API server
+  hosts: all
+  tasks:
+  - systemd:
+      name: origin-master-api
+      state: started
