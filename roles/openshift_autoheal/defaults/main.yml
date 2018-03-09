@@ -3,7 +3,7 @@
 openshift_autoheal_state: present
 
 # The namespace where the components will be created:
-openshift_autoheal_namespace: openshift-autoheal
+openshift_autoheal_namespace: openshift-monitoring
 
 # The name and port of the service:
 openshift_autoheal_service_name: autoheal

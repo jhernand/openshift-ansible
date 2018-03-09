@@ -82,7 +82,7 @@
       - name: 'null'
       - name: autoheal
         webhook_configs:
-        - url: http://autoheal.openshift-autoheal.svc.cluster.local:9099
+        - url: http://autoheal.openshift-monitoring.svc.cluster.local:9099
       - name: 'openshift-pagerduty'
         pagerduty_configs:
         - service_key: "{{ prometheus_operator_pagerduty_service_key }}"
