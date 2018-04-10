@@ -1,0 +1,21 @@
+---
+# Namespace and name:
+openshift_autoheal_name: autoheal
+openshift_autoheal_namespace: openshift-autoheal
+
+# Image name:
+openshift_autoheal_image_dict:
+  origin:
+    prefix: "docker.io/openshift/"
+    version: v0.0.1
+  openshift-enterprise:
+    prefix: "registry.access.redhat.com/openshift3/ose-"
+    version: "{{ openshift_image_tag }}"
+openshift_autoheal_image_prefix: "{{ openshift_autoheal_image_dict[openshift_deployment_type]['prefix'] }}"
+openshift_autoheal_image_version: "{{ openshift_autoheal_image_dict[openshift_deployment_type]['version'] }}"
+
+# Ansible Tower or AWX connection details:
+openshift_autoheal_awx_ca: ""
+openshift_autoheal_awx_project: "Auto-heal"
+openshift_autoheal_awx_proxy: ""
+openshift_autoheal_awx_user: "autoheal"

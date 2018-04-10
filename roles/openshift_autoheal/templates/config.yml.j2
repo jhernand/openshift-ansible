@@ -1,0 +1,10 @@
+awx:
+  address: "{{ openshift_autoheal_awx_address }}"
+  proxy: "{{ openshift_autoheal_awx_proxy }}"
+  credentialsRef:
+    namespace: {{ openshift_autoheal_namespace }}
+    name: {{ openshift_autoheal_name }}-awx-credentials
+  tlsRef:
+    namespace: {{ openshift_autoheal_namespace }}
+    name: {{ openshift_autoheal_name }}-awx-tls
+  project: "{{ openshift_autoheal_awx_project }}"

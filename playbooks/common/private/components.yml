@@ -39,3 +39,6 @@
 
 - import_playbook: ../../openshift-management/private/config.yml
   when: openshift_management_install_management | default(false) | bool
+
+- import_playbook: ../../openshift-autoheal/private/config.yml
+  when: openshift_autoheal_deploy | default(false) | bool

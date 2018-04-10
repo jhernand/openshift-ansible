@@ -1,0 +1,54 @@
+---
+- name: Check that the AWX address has been provided
+  fail:
+    msg: "Variable 'openshift_autoheal_awx_address' is mandatory but it isn't defined"
+  when: openshift_autoheal_awx_address is not defined
+
+- name: Check that the AWX password has been provided
+  fail:
+    msg: "Variable 'openshift_autoheal_awx_password' is mandatory but it isn't defined"
+  when: openshift_autoheal_awx_password is not defined
+
+- name: Create a temporary directory for doing work in the target host
+  command: mktemp -d openshift-autoheal-XXXXXX
+  register: tmpdir
+  changed_when: False
+
+- name: Generate the basic YAML configuration file
+  template:
+    src: config.yml.j2
+    dest: "{{ tmpdir.stdout }}/config.yml"
+  changed_when: False
+
+- name: Add the rules to the YAML configuration file
+  yedit:
+    src: "{{ tmpdir.stdout }}/config.yml"
+    append: True
+    key: rules
+    value: "{{ lookup('file', item) | from_yaml }}"
+  with_fileglob:
+  - rules/*.yml
+  changed_when: False
+
+- name: Load the generated YAML configuration file
+  command: "cat {{ tmpdir.stdout }}/config.yml"
+  register: tmpconfig
+  changed_when: False
+
+- name: Generate the YAML file containing the list of objects
+  template:
+    src: objects.yml.j2
+    dest: "{{ tmpdir.stdout }}/objects.yml"
+  changed_when: False
+
+- name: Create the list of objects described in the YAML file
+  shell: >
+    {{ openshift_client_binary }} apply
+    --config="{{ openshift.common.config_base }}/master/admin.kubeconfig"
+    --filename="{{ tmpdir.stdout }}/objects.yml"
+
+- name: Delete the temporary directory
+  file:
+    name: "{{ tmpdir.stdout }}"
+    state: absent
+  changed_when: False
