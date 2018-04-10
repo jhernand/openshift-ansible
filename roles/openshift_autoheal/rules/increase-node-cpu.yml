@@ -1,0 +1,10 @@
+metadata:
+  name: increase-node-cpu
+labels:
+  alertname: NodeCPUUseHigh
+awxJob:
+  template: "Increase node CPUs"
+  extraVars: |-
+    {
+      "instance": "{{ $labels.instance }}"
+    }

@@ -1,0 +1,10 @@
+metadata:
+  name: increase-node-memory
+labels:
+  alertname: NodeAvailableMemoryLow
+awxJob:
+  template: "Increase node memory"
+  extraVars: |-
+    {
+      "instance": "{{ $labels.instance }}"
+    }

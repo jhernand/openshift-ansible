@@ -1,0 +1,10 @@
+metadata:
+  name: node-down
+labels:
+  alertname: NodeDown
+awxJob:
+  template: "Start node"
+  extraVars: |-
+    {
+      "instance": "{{ $labels.instance }}"
+    }
