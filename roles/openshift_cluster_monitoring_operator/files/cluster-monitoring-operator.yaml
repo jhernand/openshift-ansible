@@ -64,6 +64,7 @@ objects:
       spec:
         containers:
         - image: ${OPERATOR_IMAGE}
+          imagePullPolicy: IfNotPresent
           name: cluster-monitoring-operator
           args:
           - "-namespace=${NAMESPACE}"
